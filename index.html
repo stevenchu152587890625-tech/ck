@@ -992,7 +992,7 @@
   .colon{transition:opacity .16s linear}
   .colon.off{opacity:.14}
 
-  /* ---- 01 MEGA · one line, as large as the plate allows ---- */
+  /* ---- 01 MAGNA · one line, as large as the plate allows ---- */
   .mega-time{
     font-family:var(--clock-font);font-size:clamp(44px,13.2vw,138px);line-height:.9;
     letter-spacing:.01em;display:flex;align-items:baseline;gap:clamp(2px,.5vw,10px);
@@ -1005,7 +1005,7 @@
      is paint-only (transform), so the digits never move. */
   .mega-time .colon{display:inline-block;transform:scaleY(1.55);transform-origin:50% 46%}
 
-  /* ---- 02 STAMP · the date is the hero ---- */
+  /* ---- 02 SIGNET · the date is the hero ---- */
   .st-top{display:flex;align-items:flex-end;gap:clamp(10px,2vw,22px)}
   .st-day{font-family:var(--clock-font);font-size:clamp(60px,15vw,168px);line-height:.8;text-shadow:0 0 46px var(--accent-glow)}
   .st-right{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:.5em}
@@ -1050,7 +1050,7 @@
   @keyframes flipRest{from{transform:rotateX(90deg)}to{transform:rotateX(0deg)}}
   .flip-sp{font-family:'Anton';font-size:clamp(20px,3.6vw,40px);color:var(--accent);align-self:center}
 
-  /* ---- 05 ANALOG · a real dial ---- */
+  /* ---- 05 SYNCRO · a real dial ---- */
   .an-svg{width:clamp(180px,34vh,300px);height:auto;overflow:visible}
   .an-face{fill:none;stroke:var(--line);stroke-width:1.4}
   .an-inner{fill:none;stroke:var(--line-soft);stroke-width:.8}
@@ -1098,7 +1098,7 @@
   .dot-grid i.on{background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
   .dot-grid i.gap{background:transparent;box-shadow:none}
 
-  /* ---- 09 BINARY · BCD columns ---- */
+  /* ---- 09 RADIX · BCD columns ---- */
   .bin-grid{display:flex;gap:clamp(10px,2.4vw,30px);align-items:flex-end}
   .bcol{display:flex;flex-direction:column;align-items:center;gap:clamp(4px,.9vw,9px)}
   .bcol .bd{width:clamp(12px,2vw,22px);height:clamp(12px,2vw,22px);border-radius:50%;
@@ -1144,10 +1144,10 @@
      other — the ink bar reads as a dark line with a white rim, the
      paper bar as a light line with a dark one, on every mode.
 
-     The profile the reader picks decides how the bars travel, so the
-     easing has to travel with it: a hop wants the long ease, a click
-     wants to land at once, and a path read frame by frame wants no
-     transition at all or every step would lag behind the last.
+     The jumping profiles are commented out in _new_rules.js and only
+     RAIN and NONE can be set, so no bar is ever seen travelling: the
+     two easing rules those profiles needed are commented out with
+     them, below. Nothing here animates a bar any more.
      ============================================================ */
   .rl-v.rl-ink,.rl-v.rl-paper{width:4px;height:112%;top:-6%}
   .rl-h.rl-ink,.rl-h.rl-paper{height:4px}
@@ -1164,31 +1164,41 @@
   html[data-mode="mobile"] .rl-h.rl-ink,
   html[data-mode="mobile"] .rl-h.rl-paper{height:3px}
 
-  /* CLICK lands the bar under the pointer at once — a slow ease would
-     read as the layer arguing with the click. */
+  /* CLICK landed the bar under the pointer at once — a slow ease would
+     read as the layer arguing with the click.
   html[data-rules="click"] .rl{
     transition:left .16s linear,top .16s linear!important;
   }
-  /* FORMED is a path, not a sequence of destinations: every frame sets
+  FORMED was a path, not a sequence of destinations: every frame set
      the position itself, so any transition here would smear each frame
      into the next and the bars would trail the curve instead of
-     tracing it. */
+     tracing it.
   html[data-rules="formed"] .rl{transition:none!important}
+  */
 
   /* RAIN: the bars give way to the weather. */
   html[data-rules="rain"] .rules .rl{display:none}
+
+  /* NONE: no motion and no lines at all. Hiding the bars is the whole
+     of it — the canvas is off too, because #rain only shows under
+     data-rules="rain" — so the rule layer ends up empty and the clock
+     is the only thing left moving on the page. */
+  html[data-rules="none"] .rules .rl{display:none}
 
   /* The rain canvas fills the rule layer — over the artwork, under the
      page — and is procedural: nothing here is a texture or a tiling. */
   #rain{position:absolute;inset:0;display:none;pointer-events:none}
   html[data-rules="rain"] #rain{display:block}
 
-  /* Reduced motion leaves the rain as one still frame, so a profile it
-     cannot animate still has to look finished rather than empty. */
+  /* Reduced motion left the rain as one still frame, so a profile it
+     could not animate still had to look finished rather than empty.
+     With CLICK and FORMED gone there is no transition left to disable
+     on a still frame, so this block is commented out with them.
   @media (prefers-reduced-motion: reduce){
     html[data-rules="click"] .rl,
     html[data-rules="formed"] .rl{transition:none!important}
   }
+  */
 
   /* ============================================================
      SIZE · the magnifier, and FILL · the phone-on-its-side clock
@@ -1273,13 +1283,23 @@
   .veil-select option{background:var(--panel-solid);color:var(--fg)}
   .veil-caret{flex:0 0 auto;color:var(--muted);pointer-events:none}
 
-  /* RAIN's own settings, and the only place they are set. The panel is
-     shown by the RAIN profile and by nothing else — so switching to RAIN
-     opens it and switching away closes it without any code running. */
-  .rain-panel{
+  /* ---- CONTROL DECK ----
+     The veil dials, the clock position and the rain settings used to be
+     three fixed panels, each anchored wherever it could find room: the
+     veil centred, the rain bottom-right, the position bottom-left. They
+     are now the three sections of one panel in the bottom-right corner,
+     opened by the DECK button in the bottom bar and closed by its × or by
+     Space. Nothing was re-laid-out inside a section — each keeps the row
+     grid it always had, and only the box moved, which is why the three
+     sections are content-agnostic here and the markup carries no wrapper
+     per section. Which sections appear is still decided by the same
+     conditions as before, so switching profile or toggling FILL still
+     opens and closes them with no code running. */
+  .deck{
     position:fixed;right:18px;z-index:89;display:none;
     bottom:calc(var(--hud-h) + 14px + env(safe-area-inset-bottom,0px));
-    flex-direction:column;align-items:stretch;gap:7px;padding:8px 14px;
+    flex-direction:column;align-items:stretch;gap:9px;padding:8px 14px 10px;
+    max-height:calc(100vh - var(--hud-h) - 40px);overflow-y:auto;
     background:var(--ticker-bg);
     -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
     border:1px solid var(--line);
@@ -1287,7 +1307,37 @@
     font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--muted);white-space:nowrap;
   }
-  html[data-rules="rain"] .rain-panel{display:flex}
+  html.deck-open .deck{display:flex}
+  .deck-hd{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding-bottom:5px;border-bottom:1px solid var(--line);color:var(--accent);
+  }
+  .deck-x{
+    font:inherit;line-height:1;color:var(--muted);background:none;
+    border:1px solid var(--line);border-radius:3px;padding:2px 7px;
+    cursor:pointer;transition:.2s;
+  }
+  .deck-x:hover{border-color:var(--accent);color:var(--accent)}
+  .deck-x:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  /* every section is a column of rows, and every section is closed until
+     its own condition says otherwise. These carry the id because the
+     origin styles the veil by `[data-mode="mobile"] .veil` — the same
+     weight as a bare `.deck .veil`, but written into the stylesheet ahead
+     of this block, so a class-level reset would lose to it on a phone. */
+  #deck .deck-sect{
+    display:none;flex-direction:column;align-items:stretch;gap:7px;
+  }
+  /* the origin builds the veil dials as a panel of their own, centred and
+     fixed; inside the deck that would tear them out of the column, so the
+     section drops all of it and keeps only the rows */
+  #deck .veil{
+    position:static;left:auto;transform:none;z-index:auto;display:flex;
+    padding:0;background:none;border:none;
+    -webkit-backdrop-filter:none;backdrop-filter:none;clip-path:none;
+  }
+  html.deck-open #deck .veil{display:flex}
+  html.deck-open[data-fill="1"][data-mode="desktop"] #deck .fill-panel{display:flex}
+  html.deck-open[data-rules="rain"] #deck .rain-panel{display:flex}
   .rain-hd{
     display:flex;align-items:center;justify-content:space-between;gap:12px;
     padding-bottom:5px;border-bottom:1px solid var(--line);color:var(--accent);
@@ -1303,41 +1353,21 @@
   .rain-colour::-webkit-color-swatch{border:none;border-radius:1px}
   .rain-colour::-moz-color-swatch{border:none;border-radius:1px}
   .rain-sw{min-width:8ch}
-  /* the bottom-right is where the veil already is, and the veil is wider
-     than the room beside it, so on a phone the panel goes up top instead */
-  [data-mode="mobile"] .rain-panel{
+  /* on a phone the deck would sit under the thumb and over the clock, so
+     it goes up under the top bar instead, where the bottom bar's own
+     handle still reaches it */
+  [data-mode="mobile"] .deck{
     top:calc(46px + env(safe-area-inset-top,0px));right:10px;bottom:auto;
-    padding:7px 10px;gap:6px;letter-spacing:.1em;
+    padding:7px 10px;gap:8px;letter-spacing:.1em;
+    left:10px;max-height:calc(100vh - 120px);
   }
 
-  /* FILL's own setting: where the clock sits once the plate is the
-     screen. It is a desktop panel for the same reason the FILL switch
-     is a desktop control — the button that opens this mode lives in the
-     wide bottom bar — and it goes on the left because the rain panel
-     has the right. */
-  .fill-panel{
-    position:fixed;left:18px;z-index:89;display:none;
-    bottom:calc(var(--hud-h) + 14px + env(safe-area-inset-bottom,0px));
-    flex-direction:column;align-items:stretch;gap:7px;padding:8px 14px;
-    background:var(--ticker-bg);
-    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
-    border:1px solid var(--line);
-    clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
-    font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--muted);white-space:nowrap;
-  }
-  html[data-fill="1"][data-mode="desktop"] .fill-panel{display:flex}
-  .fill-panel .veil-label{flex-basis:62px;letter-spacing:.1em}
-  .fill-panel .veil-range{width:132px}
-  .fill-panel .veil-out{min-width:6ch}
-  /* the veil is centred and a good deal wider than the room left beside
-     it once the window is narrow, so under 961px the panel goes up to the
-     top-left instead — where FILL has already cleared the top bar away */
-  @media (max-width:960px){
-    html[data-fill="1"][data-mode="desktop"] .fill-panel{
-      top:calc(10px + env(safe-area-inset-top,0px));left:10px;bottom:auto;
-    }
-  }
+  /* FILL's own section: where the clock sits once the plate is the
+     screen. It is desktop-only for the same reason the FILL switch is —
+     the button that opens the mode lives in the wide bottom bar. */
+  .deck .fill-panel .veil-label{flex-basis:62px;letter-spacing:.1em}
+  .deck .fill-panel .veil-range{width:132px}
+  .deck .fill-panel .veil-out{min-width:6ch}
 
   /* ---- LAYOUT (P / C) ---- the theme switcher's own box, because it is
      the same kind of control: a small exclusive set of two. */
@@ -1379,6 +1409,21 @@
   .hud-fill:hover{border-color:var(--accent);box-shadow:0 0 12px var(--accent-glow)}
   .hud-fill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);box-shadow:0 0 18px var(--accent-glow)}
   .hud-fill:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  /* the deck's handle, dressed like FILL because it is the same kind of
+     control — a switch that turns something on, and stays lit while it is */
+  .hud-deck{
+    display:inline-flex;align-items:center;gap:7px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);background:none;border:1px solid var(--line);
+    padding:5px 9px;border-radius:4px;transition:.2s;
+  }
+  .hud-deck:hover{border-color:var(--accent);box-shadow:0 0 12px var(--accent-glow)}
+  .hud-deck[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);box-shadow:0 0 18px var(--accent-glow)}
+  .hud-deck:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  /* the caret is the whole of the open/closed sign, and it turns over */
+  .hud-deck .car{display:inline-block;transition:transform .25s}
+  .hud-deck[aria-expanded="true"] .car{transform:rotate(180deg)}
+  [data-mode="mobile"] .hud-deck{padding:4px 7px;font-size:9px}
   .hud-size{display:inline-flex;align-items:center;gap:9px;color:var(--muted-2)}
   .hud-size .lbl{font-size:9.5px;letter-spacing:.2em;cursor:pointer}
   .hud-size output{min-width:54px;text-align:right;font-size:10.5px;letter-spacing:.06em;
@@ -1436,9 +1481,7 @@
   html.ui-off .wrap > footer,
   html.ui-off .hud,
   html.ui-off #hud-toast,
-  html.ui-off .veil,
-  html.ui-off .rain-panel,
-  html.ui-off .fill-panel,
+  html.ui-off .deck,
   html.ui-off #prog,
   html.ui-off #action-flash{display:none!important}
 
@@ -1479,6 +1522,18 @@
   .uib:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
   [data-mode="mobile"] .uib{padding:3px 7px;font-size:9px}
   [data-mode="mobile"] .uispot{width:104px;height:92px}
+
+  /* ---- the preset: one press, and the composition is there. It is
+         not a toggle, so it borrows FILL's dress with no lit state of
+         its own — the only sign it did anything is the picture. ---- */
+  .hud-preset{
+    display:inline-flex;align-items:center;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);background:none;border:1px solid var(--line);
+    padding:5px 9px;border-radius:4px;transition:.2s;
+  }
+  .hud-preset:hover{border-color:var(--accent);color:var(--accent);box-shadow:0 0 12px var(--accent-glow)}
+  .hud-preset:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
   /* ---- PRODUCT MATRIX (dashboard / horizontal compare) ---- */
   .matrix-wrap{position:relative}
@@ -2163,7 +2218,7 @@
         <a href="https://iot.rkrint.com/" target="_blank" rel="noopener">iot</a>
         <a href="https://zero.rkrint.com/" target="_blank" rel="noopener">zero</a>
         <a href="https://t.me/rkrint" target="_blank" rel="noopener">telegram</a>
-        <span class="hint">[T] CYCLE THEME</span>
+        <span class="hint">[A]/[D] THEME</span>
       </div>
     </footer>
 
@@ -2174,21 +2229,29 @@
     <div class="hud-hints hint-desk">
       <span>SET &#9656; FACE / FONT / ZONE:</span>
       <span class="k"><kbd>&#8592;</kbd><kbd>&#8594;</kbd> FACE</span>
+      <span class="k"><kbd>W</kbd><kbd>S</kbd> FACE</span>
       <span class="k"><kbd>1</kbd>&ndash;<kbd>0</kbd> FACE</span>
       <span class="k"><kbd>F</kbd> FONT</span>
       <span class="k"><kbd>Z</kbd> ZONE</span>
+      <span class="k"><kbd>A</kbd><kbd>D</kbd> THEME</span>
       <span class="k"><kbd>SPACE</kbd> SECONDS</span>
-      <span class="k"><kbd>D</kbd> DATE</span>
       <span class="k"><kbd>H</kbd> 24H</span>
-      <span class="k"><kbd>T</kbd> THEME</span>
       <span class="k"><kbd>M</kbd> FILL</span>
+      <span class="k"><kbd>R</kbd> BAR MOTION</span>
       <span class="k"><kbd>U</kbd> UI</span>
+      <span class="k"><kbd>P</kbd> PRESET</span>
+      <span class="k"><kbd>O</kbd> PRESET + FULL</span>
     </div>
     <span class="hint-mob">TAP A FACE &middot; TAP A CHIP</span>
     <div class="hud-status" id="statusReadout" aria-live="polite" role="status">READY // CHRONO CORE</div>
     <div class="hud-zoom" role="group" aria-label="Clock size">
       <button class="hud-fill" id="hudFill" type="button" aria-pressed="false"
               title="Fill the screen with the clock — the artwork character stays behind it (M)">FILL &#8596;</button>
+      <!-- One press puts the whole composition up: face 02, 2.91×, the
+           clock at −22.5vw inside the filled screen. The label is the key. -->
+      <button class="hud-preset" id="hudPreset" type="button"
+              aria-label="Apply the preset composition"
+              title="Preset — FACE 02 STAMP, 2.91&#215;, filled screen with the clock at &#8722;22.5vw (P)">P</button>
       <div class="hud-size">
         <label class="lbl" for="sizeRange">SIZE</label>
         <input id="sizeRange" type="range" min="0" max="1000" step="1" value="500"
@@ -2196,6 +2259,14 @@
         <output id="sizeOut" for="sizeRange">1.00&times;</output>
       </div>
     </div>
+    <!-- The control deck's handle. It sits beside the fullscreen button
+         rather than in .hud-zoom, because .hud-zoom is the desktop-only
+         group and the veil and the rain are worth reaching on a phone
+         too. Space closes the deck, so the label carries the key as well
+         as the caret that says which way it opens. -->
+    <button class="hud-deck" id="deckBtn" type="button" aria-pressed="false"
+            aria-expanded="false" aria-controls="deck"
+            title="Open the control deck — veil, artwork, bar motion, rain and the clock position (Space closes it)">DECK <span class="car" aria-hidden="true">&#9662;</span></button>
     <button class="hud-go" id="hudGo" type="button">FULLSCREEN &#10530;</button>
   </div>
 
@@ -2214,77 +2285,95 @@
 
   <!-- every mode: two dials for everything standing between the reader and
        the artwork — the plates drawn on top of it, and the artwork itself -->
-  <div class="veil" id="veil" role="group" aria-label="Artwork transparency and background bars">
-    <div class="veil-row">
-      <label class="veil-label" for="veilRange">PLATE VEIL</label>
-      <input class="veil-range" id="veilRange" type="range" min="0" max="100" step="1" value="100"
-             aria-describedby="veilOut">
-      <output class="veil-out" id="veilOut" for="veilRange">100%</output>
+  <!-- One deck for everything the reader can point at that is not the
+       clock itself. The × and Space close it; the DECK button in the
+       bottom bar opens it again. -->
+  <div class="deck" id="deck" role="group" aria-label="Control deck">
+    <div class="deck-hd">
+      <span>CONTROL DECK</span>
+      <button class="deck-x" id="deckClose" type="button"
+              aria-label="Close the control deck" title="Close the deck (Space)">&#215;</button>
     </div>
-    <div class="veil-row">
-      <label class="veil-label" for="artRange">ARTWORK</label>
-      <input class="veil-range" id="artRange" type="range" min="0" max="100" step="1" value="100"
-             aria-describedby="artOut">
-      <output class="veil-out" id="artOut" for="artRange">100%</output>
-    </div>
-    <div class="veil-row">
-      <span class="veil-label" id="ruleLabel">BAR MOTION</span>
-      <select class="veil-select" id="ruleMode" aria-labelledby="ruleLabel"
-              title="Background bars — seven profiles (R cycles them)"></select>
-      <span class="veil-caret" aria-hidden="true">&#9662;</span>
-    </div>
-  </div>
 
-  <!-- Rain settings. This panel is shown by the RAIN profile and by nothing
-       else, because RAIN is the only profile with anything to set. -->
-  <div class="rain-panel" id="rainPanel" role="group" aria-label="Rain settings">
-    <div class="rain-hd"><span>RAIN SETTINGS</span><span class="rain-tag">WEATHER</span></div>
-    <div class="veil-row">
-      <label class="veil-label" for="rainColour">COLOUR</label>
-      <input class="rain-colour" id="rainColour" type="color" value="#cfe6ff"
-             aria-describedby="rainSwatch">
-      <output class="veil-out rain-sw" id="rainSwatch">#CFE6FF</output>
+    <!-- Where the clock sits once FILL has taken the plate to the whole
+         screen. It belongs to one mode, so it opens and closes with that
+         mode and nothing has to run to do it. -->
+    <div class="deck-sect fill-panel" id="fillPanel" role="group" aria-label="Clock position in fill">
+      <div class="rain-hd"><span>CLOCK POSITION</span><span class="rain-tag">FILL</span></div>
+      <div class="veil-row">
+        <label class="veil-label" for="fillX" title="Move the clock left and right">X SHIFT</label>
+        <input class="veil-range" id="fillX" type="range" min="-45" max="45" step="0.5" value="0"
+               aria-describedby="fillXOut">
+        <output class="veil-out" id="fillXOut" for="fillX">0.0VW</output>
+      </div>
+      <div class="veil-row">
+        <label class="veil-label" for="fillY" title="Move the clock up and down">Y SHIFT</label>
+        <input class="veil-range" id="fillY" type="range" min="-45" max="45" step="0.5" value="0"
+               aria-describedby="fillYOut">
+        <output class="veil-out" id="fillYOut" for="fillY">0.0VH</output>
+      </div>
+      <div class="veil-row">
+        <button class="veil-mode" id="fillReset" type="button" aria-pressed="true"
+                title="Put the clock back in the middle"><span>CENTRE</span></button>
+      </div>
     </div>
-    <div class="veil-row">
-      <label class="veil-label" for="rainDensity">DENSITY</label>
-      <input class="veil-range" id="rainDensity" type="range" min="0" max="100" step="1" value="45"
-             aria-describedby="rainDensityOut">
-      <output class="veil-out" id="rainDensityOut" for="rainDensity">45%</output>
-    </div>
-    <div class="veil-row">
-      <label class="veil-label" for="rainFade">FADE</label>
-      <input class="veil-range" id="rainFade" type="range" min="2" max="100" step="1" value="58"
-             aria-describedby="rainFadeOut">
-      <output class="veil-out" id="rainFadeOut" for="rainFade">58%</output>
-    </div>
-    <div class="veil-row">
-      <span class="veil-label" id="rainImpactLabel">IMPACT</span>
-      <button class="veil-mode" id="rainImpact" type="button" aria-pressed="true"
-              aria-labelledby="rainImpactLabel"
-              title="Splashes where the drops meet the ground"><span id="rainImpactState">ON</span></button>
-    </div>
-  </div>
 
-  <!-- Where the clock sits once FILL has taken the plate to the whole
-       screen. Like the rain panel it belongs to one mode, so it opens and
-       closes with that mode and nothing has to run to do it. -->
-  <div class="fill-panel" id="fillPanel" role="group" aria-label="Clock position in fill">
-    <div class="rain-hd"><span>CLOCK POSITION</span><span class="rain-tag">FILL</span></div>
-    <div class="veil-row">
-      <label class="veil-label" for="fillX" title="Move the clock left and right">X SHIFT</label>
-      <input class="veil-range" id="fillX" type="range" min="-45" max="45" step="0.5" value="0"
-             aria-describedby="fillXOut">
-      <output class="veil-out" id="fillXOut" for="fillX">0.0VW</output>
+    <!-- Everything standing between the reader and the artwork: the plates
+         drawn over it, the artwork itself, and the motion of the rule layer
+         behind both. The menu is a select rather than a cycling button
+         because a control that only says what comes next stops being
+         readable at about three profiles. -->
+    <div class="veil deck-sect" id="veil" role="group" aria-label="Artwork transparency and background bars">
+      <div class="rain-hd"><span>PLATE VEIL</span><span class="rain-tag">BG</span></div>
+      <div class="veil-row">
+        <label class="veil-label" for="veilRange">VEIL</label>
+        <input class="veil-range" id="veilRange" type="range" min="0" max="100" step="1" value="100"
+               aria-describedby="veilOut">
+        <output class="veil-out" id="veilOut" for="veilRange">100%</output>
+      </div>
+      <div class="veil-row">
+        <label class="veil-label" for="artRange">ARTWORK</label>
+        <input class="veil-range" id="artRange" type="range" min="0" max="100" step="1" value="100"
+               aria-describedby="artOut">
+        <output class="veil-out" id="artOut" for="artRange">100%</output>
+      </div>
+      <div class="veil-row">
+        <span class="veil-label" id="ruleLabel">BAR MOTION</span>
+        <select class="veil-select" id="ruleMode" aria-labelledby="ruleLabel"
+                title="Background motion — RAIN or NONE (R cycles them)"></select>
+        <span class="veil-caret" aria-hidden="true">&#9662;</span>
+      </div>
     </div>
-    <div class="veil-row">
-      <label class="veil-label" for="fillY" title="Move the clock up and down">Y SHIFT</label>
-      <input class="veil-range" id="fillY" type="range" min="-45" max="45" step="0.5" value="0"
-             aria-describedby="fillYOut">
-      <output class="veil-out" id="fillYOut" for="fillY">0.0VH</output>
-    </div>
-    <div class="veil-row">
-      <button class="veil-mode" id="fillReset" type="button" aria-pressed="true"
-              title="Put the clock back in the middle"><span>CENTRE</span></button>
+
+    <!-- Rain settings. This section is shown by the RAIN profile and by
+         nothing else, because RAIN is the only profile with anything to
+         set. -->
+    <div class="rain-panel deck-sect" id="rainPanel" role="group" aria-label="Rain settings">
+      <div class="rain-hd"><span>RAIN SETTINGS</span><span class="rain-tag">WEATHER</span></div>
+      <div class="veil-row">
+        <label class="veil-label" for="rainColour">COLOUR</label>
+        <input class="rain-colour" id="rainColour" type="color" value="#cfe6ff"
+               aria-describedby="rainSwatch">
+        <output class="veil-out rain-sw" id="rainSwatch">#CFE6FF</output>
+      </div>
+      <div class="veil-row">
+        <label class="veil-label" for="rainDensity">DENSITY</label>
+        <input class="veil-range" id="rainDensity" type="range" min="0" max="100" step="1" value="45"
+               aria-describedby="rainDensityOut">
+        <output class="veil-out" id="rainDensityOut" for="rainDensity">45%</output>
+      </div>
+      <div class="veil-row">
+        <label class="veil-label" for="rainFade">FADE</label>
+        <input class="veil-range" id="rainFade" type="range" min="2" max="100" step="1" value="58"
+               aria-describedby="rainFadeOut">
+        <output class="veil-out" id="rainFadeOut" for="rainFade">58%</output>
+      </div>
+      <div class="veil-row">
+        <span class="veil-label" id="rainImpactLabel">IMPACT</span>
+        <button class="veil-mode" id="rainImpact" type="button" aria-pressed="true"
+                aria-labelledby="rainImpactLabel"
+                title="Splashes where the drops meet the ground"><span id="rainImpactState">ON</span></button>
+      </div>
     </div>
   </div>
 
@@ -2322,23 +2411,21 @@
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', quietGrid);
   else quietGrid();
 
-  /* ---- 2. the moving bars, and the rain ----------------------- *
-   * Seven profiles, one engine.
+  /* ---- 2. the background layer: rain, and nothing --------------- *
+   * Two profiles, one engine.
    *
-   * The hop used to be random every second, which the reader called
-   * noise, so the only profiles left that draw at random are the two
-   * whose whole point is randomness. Everything else is derived from
-   * the clock and is therefore repeatable, and every destination is
-   * reached by easing there rather than by appearing there.
+   * The six jumping bar profiles — sync, rotate, rein, click, formed
+   * and off — are commented out below rather than deleted, so each is
+   * a self-contained block that comes back by uncommenting it and
+   * putting its name back in MODES. Nothing in the live path depends
+   * on any of them.
    *
-   *   sync    all six re-place together, once a second
-   *   rotate  one bar every 160ms, in random order
-   *   rein    a fixed order at a fixed step — a readable sweep
-   *   click   still until clicked, then the nearest bar on each axis
-   *           snaps to the point clicked
-   *   formed  six smooth paths off one master clock, no jumps at all
-   *   rain    the bars give way to procedural rain
-   *   off     still
+   *   rain    procedural weather on the canvas; the bars stay hidden
+   *   none    no motion and no lines at all — the layer is empty
+   *
+   * The six bars are still built, because this layer owns them and a
+   * restored profile has to find them where they always were; both
+   * live profiles simply hide them, from CSS, off data-rules.
    *
    * window.RULES is the handle the controls read and set, and every
    * change is announced on a rk:rules event so no control has to
@@ -2374,110 +2461,122 @@
     for(var i = 0; i < BARS.length; i++) move(BARS[i], at[BARS[i].vert ? vi++ : hi++]);
   })();
 
-  var MODES = ['sync', 'rotate', 'rein', 'click', 'formed', 'rain', 'off'];
-  var STEP  = { sync: 1000, rotate: 160, rein: 200 };
-  var mode  = 'sync';
+  var MODES = ['rain', 'none'];
+  /* the stepped profiles owned this, and every one of them is commented
+     out, so it is empty and startTimers() starts nothing. */
+  var STEP  = {};
+  var mode  = 'rain';
   var timer = 0;
   var still = false;
   try{ still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
 
-  /* ---- the three that take turns ----------------------------- */
-  function placeRandom(b){
-    var L = bounds(b);
-    move(b, L[0] + Math.random() * (L[1] - L[0]));
-  }
-  function placeAllRandom(){
-    for(var i = 0; i < BARS.length; i++) placeRandom(BARS[i]);
-  }
+  // ---- the three that took turns: SYNC / ROTATE / REIN --------- *
+  // Commented out whole. SYNC and ROTATE are the random ones, REIN
+  // the ordered sweep; all three moved the bars, and the bars no
+  // longer move.
+  // function placeRandom(b){
+  //   var L = bounds(b);
+  //   move(b, L[0] + Math.random() * (L[1] - L[0]));
+  // }
+  // function placeAllRandom(){
+  //   for(var i = 0; i < BARS.length; i++) placeRandom(BARS[i]);
+  // }
+  //
+  // rotate walks a shuffled bag rather than a fresh draw each tick:
+  // across any six ticks every bar moves exactly once, and no bar
+  // ever takes two turns in a row
+  // var bag = [];
+  // function nextBagBar(){
+  //   if(!bag.length){
+  //     bag = BARS.slice();
+  //     for(var i = bag.length - 1; i > 0; i--){
+  //       var j = Math.floor(Math.random() * (i + 1));
+  //       var t = bag[i]; bag[i] = bag[j]; bag[j] = t;
+  //     }
+  //   }
+  //   return bag.pop();
+  // }
+  //
+  // rein is the ordered one: a fixed running order, and each bar
+  // advances by a fixed step from where it already is, wrapping at
+  // the far edge. Nothing is drawn — the eye can follow the sweep,
+  // and it returns to the same place every time round.
+  // var REIN_V = 13, REIN_H = 11, reinAt = 0;
+  // function reinStep(){
+  //   var b = BARS[reinAt % BARS.length];
+  //   reinAt++;
+  //   var L = bounds(b), step = b.vert ? REIN_V : REIN_H;
+  //   var p = b.pos + step;
+  //   if(p > L[1]) p = L[0] + (p - L[1]);
+  //   move(b, p);
+  // }
 
-  /* rotate walks a shuffled bag rather than a fresh draw each tick:
-     across any six ticks every bar moves exactly once, and no bar
-     ever takes two turns in a row */
-  var bag = [];
-  function nextBagBar(){
-    if(!bag.length){
-      bag = BARS.slice();
-      for(var i = bag.length - 1; i > 0; i--){
-        var j = Math.floor(Math.random() * (i + 1));
-        var t = bag[i]; bag[i] = bag[j]; bag[j] = t;
-      }
-    }
-    return bag.pop();
-  }
+  // ---- CLICK: the reader placed the bars ---------------------- *
+  // The listener is commented out with its profile, and it has to be
+  // removed rather than left inert: it sits on pointerdown in the
+  // capture phase, so leaving it bound would put a handler on every
+  // click on the page for a mode that no longer exists.
+  // var NO_CLICK = 'button, a, input, select, label, .hud, .veil, .rain-panel, .tabnav, .matrix, .ticker, #ctx';
+  // document.addEventListener('pointerdown', function(e){
+  //   if(mode !== 'click') return;
+  //   if(e.target && e.target.closest && e.target.closest(NO_CLICK)) return;
+  //   var x = (e.clientX / document.documentElement.clientWidth) * 100;
+  //   var y = (e.clientY / document.documentElement.clientHeight) * 100;
+  //   /* the bar on each axis that is already nearest to the point
+  //      clicked is the one that takes it, so the layer re-forms around
+  //      the click instead of everything lurching to the same place */
+  //   var nv = null, nh = null, dv = 1e9, dh = 1e9;
+  //   for(var i = 0; i < BARS.length; i++){
+  //     var b = BARS[i], d = Math.abs(b.pos - (b.vert ? x : y));
+  //     if(b.vert){ if(d < dv){ dv = d; nv = b; } }
+  //     else      { if(d < dh){ dh = d; nh = b; } }
+  //   }
+  //   if(nv) move(nv, x);
+  //   if(nh) move(nh, y);
+  // }, true);
 
-  /* rein is the ordered one: a fixed running order, and each bar
-     advances by a fixed step from where it already is, wrapping at
-     the far edge. Nothing is drawn — the eye can follow the sweep,
-     and it returns to the same place every time round. */
-  var REIN_V = 13, REIN_H = 11, reinAt = 0;
-  function reinStep(){
-    var b = BARS[reinAt % BARS.length];
-    reinAt++;
-    var L = bounds(b), step = b.vert ? REIN_V : REIN_H;
-    var p = b.pos + step;
-    if(p > L[1]) p = L[0] + (p - L[1]);
-    move(b, p);
-  }
+  // ---- FORMED: six paths off one master clock ------------------ *
+  // Choreography, not noise: six continuous functions of one master
+  // clock, in harmonically related periods, so the whole set moved as
+  // one composition and came back to where it started.
+  //
+  // The amplitudes nested on each axis — 40 / 36 / 32 on the
+  // verticals, 34 / 30 / 26 on the horizontals — and that is what made
+  // it read as a design rather than a tangle: the three bars on an
+  // axis could never swap order or cross, so the layer kept its
+  // composition the whole way round instead of collapsing into a knot
+  // at the middle.
+  // var FORMED = [
+  //   { id: 'rlV',      mid: 50, amp: 40, w: 1.000, ph: 0.00 },
+  //   { id: 'rlH',      mid: 48, amp: 34, w: 0.500, ph: 0.60 },
+  //   { id: 'rlVInk',   mid: 50, amp: 36, w: 1.500, ph: 1.05 },
+  //   { id: 'rlVPaper', mid: 50, amp: 32, w: 0.750, ph: 2.10 },
+  //   { id: 'rlHInk',   mid: 48, amp: 30, w: 1.250, ph: 2.00 },
+  //   { id: 'rlHPaper', mid: 48, amp: 26, w: 0.625, ph: 3.10 }
+  // ];
+  // var FORMED_PERIOD = 12;                     /* one master cycle, seconds */
+  //
+  // function formedAt(t){
+  //   var th = (t / FORMED_PERIOD) * Math.PI * 2;
+  //   for(var i = 0; i < FORMED.length; i++){
+  //     var f = FORMED[i], b = BY_ID[f.id];
+  //     if(b) move(b, f.mid + f.amp * Math.sin(f.w * th + f.ph));
+  //   }
+  // }
 
-  /* formed is choreography, not noise: six continuous functions of one
-     master clock, in harmonically related periods, so the whole set
-     moves as one composition and comes back to where it started.
-     Nothing here jumps, because nothing here is discrete.
-
-     The amplitudes nest on each axis — 40 / 36 / 32 on the verticals,
-     34 / 30 / 26 on the horizontals — and that is what makes it read
-     as a design rather than a tangle: the three bars on an axis can
-     never swap order or cross, so the layer keeps its composition the
-     whole way round instead of collapsing into a knot at the middle. */
-  var FORMED = [
-    { id: 'rlV',      mid: 50, amp: 40, w: 1.000, ph: 0.00 },
-    { id: 'rlH',      mid: 48, amp: 34, w: 0.500, ph: 0.60 },
-    { id: 'rlVInk',   mid: 50, amp: 36, w: 1.500, ph: 1.05 },
-    { id: 'rlVPaper', mid: 50, amp: 32, w: 0.750, ph: 2.10 },
-    { id: 'rlHInk',   mid: 48, amp: 30, w: 1.250, ph: 2.00 },
-    { id: 'rlHPaper', mid: 48, amp: 26, w: 0.625, ph: 3.10 }
-  ];
-  var FORMED_PERIOD = 12;                       /* one master cycle, seconds */
-
-  function formedAt(t){
-    var th = (t / FORMED_PERIOD) * Math.PI * 2;
-    for(var i = 0; i < FORMED.length; i++){
-      var f = FORMED[i], b = BY_ID[f.id];
-      if(b) move(b, f.mid + f.amp * Math.sin(f.w * th + f.ph));
-    }
-  }
-
-  function tick(){
-    if(mode === 'sync')        placeAllRandom();
-    else if(mode === 'rotate') placeRandom(nextBagBar());
-    else if(mode === 'rein')   reinStep();
-  }
+  // the tick that drove all three stepped profiles is commented out
+  // with them; nothing calls it now.
+  // function tick(){
+  //   if(mode === 'sync')        placeAllRandom();
+  //   else if(mode === 'rotate') placeRandom(nextBagBar());
+  //   else if(mode === 'rein')   reinStep();
+  // }
 
   function startTimers(){
     clearInterval(timer); timer = 0;
     var ms = STEP[mode];
     if(ms && !still) timer = setInterval(tick, ms);
   }
-
-  /* ---- click: the reader places the bars --------------------- */
-  var NO_CLICK = 'button, a, input, select, label, .hud, .veil, .rain-panel, .tabnav, .matrix, .ticker, #ctx';
-  document.addEventListener('pointerdown', function(e){
-    if(mode !== 'click') return;
-    if(e.target && e.target.closest && e.target.closest(NO_CLICK)) return;
-    var x = (e.clientX / document.documentElement.clientWidth) * 100;
-    var y = (e.clientY / document.documentElement.clientHeight) * 100;
-    /* the bar on each axis that is already nearest to the point
-       clicked is the one that takes it, so the layer re-forms around
-       the click instead of everything lurching to the same place */
-    var nv = null, nh = null, dv = 1e9, dh = 1e9;
-    for(var i = 0; i < BARS.length; i++){
-      var b = BARS[i], d = Math.abs(b.pos - (b.vert ? x : y));
-      if(b.vert){ if(d < dv){ dv = d; nv = b; } }
-      else      { if(d < dh){ dh = d; nh = b; } }
-    }
-    if(nv) move(nv, x);
-    if(nh) move(nh, y);
-  }, true);
 
   /* ---- the rain ---------------------------------------------- *
    * Drawn drop by drop on a canvas: no sheet of texture, no tiled
@@ -2634,7 +2733,6 @@
   }
 
   function frame(now){
-    var t  = (now - t0) * 0.001;
     var dt = last ? Math.min(0.05, (now - last) * 0.001) : 0;
     last = now;
 
@@ -2646,28 +2744,37 @@
       return;
     }
 
-    var sc  = window.pageYOffset || document.documentElement.scrollTop || 0;
-    var cap = window.innerHeight * 0.07;
-    var par = Math.max(-cap, Math.min(cap, sc * 0.35));   /* follow the page down */
-
-    if(mode === 'formed') formedAt(t);
-
-    /* the sway belongs to the profiles that hop: a bar that was just
-       placed should sit where it was placed, so click and formed are
-       driven by their own motion and get none of it */
-    var sway = (mode === 'sync' || mode === 'rotate' || mode === 'rein');
-
-    for(var i = 0; i < BARS.length; i++){
-      var b  = BARS[i];
-      var dx = sway && b.vert ? Math.sin(t * (0.19 + i * 0.03)) * 7 : 0;
-      b.el.style.transform = 'translate3d(' + dx.toFixed(2) + 'px,' + par.toFixed(1) + 'px,0)';
-    }
+    // The rest of this loop served the profiles that moved the bars:
+    // formedAt() traced the six paths, `par` followed the page down,
+    // and `sway` gave the hopping bars their drift. It is commented
+    // out whole, and nothing can reach it — `none` never starts a
+    // frame and rain returns above — so the loop is rain's alone.
+    //
+    // var t  = (now - t0) * 0.001;
+    // var sc  = window.pageYOffset || document.documentElement.scrollTop || 0;
+    // var cap = window.innerHeight * 0.07;
+    // var par = Math.max(-cap, Math.min(cap, sc * 0.35));   /* follow the page down */
+    //
+    // if(mode === 'formed') formedAt(t);
+    //
+    // /* the sway belongs to the profiles that hop: a bar that was just
+    //    placed should sit where it was placed, so click and formed are
+    //    driven by their own motion and get none of it */
+    // var sway = (mode === 'sync' || mode === 'rotate' || mode === 'rein');
+    //
+    // for(var i = 0; i < BARS.length; i++){
+    //   var b  = BARS[i];
+    //   var dx = sway && b.vert ? Math.sin(t * (0.19 + i * 0.03)) * 7 : 0;
+    //   b.el.style.transform = 'translate3d(' + dx.toFixed(2) + 'px,' + par.toFixed(1) + 'px,0)';
+    // }
     raf = requestAnimationFrame(frame);
   }
 
   function ensureLoop(){
     cancelAnimationFrame(raf); raf = 0;
-    if(mode === 'off'){ parkBars(); return; }
+    /* none is the empty layer: no frame, no canvas, nothing to park,
+       because the bars are hidden from CSS and never seen again. */
+    if(mode === 'none'){ parkBars(); return; }
     if(mode === 'rain'){
       if(!R.w) resizeRain();
       if(still){ drawRain(0); return; }
@@ -2706,7 +2813,9 @@
   }
 
   function setMode(m){
-    mode = (MODES.indexOf(m) >= 0) ? m : 'sync';
+    /* anything the list no longer holds — a stored 'sync' from the
+       build that had seven profiles, say — falls back to rain */
+    mode = (MODES.indexOf(m) >= 0) ? m : 'rain';
     document.documentElement.setAttribute('data-rules', mode);
     if(mode === 'rain'){ resizeRain(); }
     else { clearRain(); }
@@ -3053,16 +3162,16 @@ function applyMode(){
    at 60fps all day.
    ============================================================ */
 const FACES = [
-  { n:'01', t:'MEGA',   key:'BIG DIGITS',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M7 10v4M12 10v4M17 10v4"/></svg>' },
-  { n:'02', t:'STAMP',  key:'DATE HERO',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M7.5 14h3v4h-3z"/></svg>' },
-  { n:'03', t:'MONO',   key:'TERMINAL',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9.5l3 2.5-3 2.5M12.5 15H17"/></svg>' },
-  { n:'04', t:'FLIP',   key:'SPLIT-FLAP',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3" width="7" height="9" rx="1.4"/><rect x="13.5" y="3" width="7" height="9" rx="1.4"/><path d="M3 15h18M3 19h11"/></svg>' },
-  { n:'05', t:'ANALOG', key:'HANDS',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 6.5V12l3.5 2.2"/></svg>' },
-  { n:'06', t:'RING',   key:'PROGRESS',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.6"/><circle cx="12" cy="12" r="2.2"/></svg>' },
-  { n:'07', t:'SEG7',   key:'SEVEN-SEG',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.5 4.5h11M6.5 12h11M6.5 19.5h11M5 5.5v6M19 5.5v6M5 12.5v6M19 12.5v6"/></svg>' },
-  { n:'08', t:'DOT',    key:'MATRIX',      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 8h.01M12 8h.01M17 8h.01M7 12h.01M12 12h.01M17 12h.01M7 16h.01M12 16h.01M17 16h.01"/><circle cx="7" cy="8" r="1"/><circle cx="12" cy="8" r="1"/><circle cx="17" cy="8" r="1"/><circle cx="7" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="17" cy="12" r="1"/><circle cx="7" cy="16" r="1"/><circle cx="12" cy="16" r="1"/></svg>' },
-  { n:'09', t:'BINARY', key:'BCD',         icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4v16M12 4v16M18 4v16"/><circle cx="6" cy="8" r="1.6"/><circle cx="12" cy="14" r="1.6"/><circle cx="18" cy="10" r="1.6"/></svg>' },
-  { n:'10', t:'WORD',   key:'SPELLED',     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 10.5h16M4 15h12M4 19.5h7"/></svg>' }
+  { n:'01', t:'MAGNA',   key:'PRIMARY DISPLAY',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M7 10v4M12 10v4M17 10v4"/></svg>' },
+  { n:'02', t:'SIGNET',  key:'DATE HERO',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M7.5 14h3v4h-3z"/></svg>' },
+  { n:'03', t:'VECTOR',  key:'TERMINAL',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9.5l3 2.5-3 2.5M12.5 15H17"/></svg>' },
+  { n:'04', t:'CARTA',   key:'SPLIT-FLAP',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3" width="7" height="9" rx="1.4"/><rect x="13.5" y="3" width="7" height="9" rx="1.4"/><path d="M3 15h18M3 19h11"/></svg>' },
+  { n:'05', t:'SYNCRO',  key:'ANALOG CORE',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 6.5V12l3.5 2.2"/></svg>' },
+  { n:'06', t:'ORBIT',   key:'PROGRESS RING',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.6"/><circle cx="12" cy="12" r="2.2"/></svg>' },
+  { n:'07', t:'ARRAY',   key:'SEVEN-SEGMENT',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.5 4.5h11M6.5 12h11M6.5 19.5h11M5 5.5v6M19 5.5v6M5 12.5v6M19 12.5v6"/></svg>' },
+  { n:'08', t:'LATTICE', key:'DOT MATRIX',      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 8h.01M12 8h.01M17 8h.01M7 12h.01M12 12h.01M17 12h.01M7 16h.01M12 16h.01M17 16h.01"/><circle cx="7" cy="8" r="1"/><circle cx="12" cy="8" r="1"/><circle cx="17" cy="8" r="1"/><circle cx="7" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="17" cy="12" r="1"/><circle cx="7" cy="16" r="1"/><circle cx="12" cy="16" r="1"/></svg>' },
+  { n:'09', t:'RADIX',   key:'BCD',         icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 4v16M12 4v16M18 4v16"/><circle cx="6" cy="8" r="1.6"/><circle cx="12" cy="14" r="1.6"/><circle cx="18" cy="10" r="1.6"/></svg>' },
+  { n:'10', t:'LEXICON', key:'SPELLED TIME',     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 10.5h16M4 15h12M4 19.5h7"/></svg>' }
 ];
 
 /* the right-click menu addresses the tab list as `LINKS` (the gateway's
@@ -3091,7 +3200,7 @@ const FONTS = [
 ];
 
 const ZONES = [
-  { city:'LOCAL',       tz:null,                   note:'SYSTEM'  },
+  { city:'LOCAL',       tz:null,                   note:'PRIMARY REFERENCE' },
   { city:'UTC',         tz:'UTC',                  note:'ZULU'    },
   { city:'TAIPEI',      tz:'Asia/Taipei',          note:'UTC+8'   },
   { city:'TOKYO',       tz:'Asia/Tokyo',           note:'UTC+9'   },
@@ -3191,8 +3300,8 @@ function reading(){
    ============================================================ */
 const BUILD = {
 
-  /* ---- 01 MEGA ---- */
-  MEGA(root){
+  /* ---- 01 MAGNA ---- */
+  MAGNA(root){
     root.className = 'ck ck-mega';
     root.innerHTML =
       '<div class="mega-time">'
@@ -3211,8 +3320,8 @@ const BUILD = {
     };
   },
 
-  /* ---- 02 STAMP ---- */
-  STAMP(root){
+  /* ---- 02 SIGNET ---- */
+  SIGNET(root){
     root.className = 'ck ck-stamp';
     root.innerHTML =
       '<div class="st-top"><span class="st-day" data-k="d">28</span>'
@@ -3233,7 +3342,7 @@ const BUILD = {
   },
 
   /* ---- 03 MONO ---- */
-  MONO(root){
+  VECTOR(root){
     root.className = 'ck ck-mono';
     root.innerHTML =
       '<div class="mono-wrap"><div class="ghost" data-k="g">88:88:88</div><div class="real" data-k="r">22:41:07</div></div>'
@@ -3254,7 +3363,7 @@ const BUILD = {
   },
 
   /* ---- 04 FLIP ---- */
-  FLIP(root){
+  CARTA(root){
     root.className = 'ck ck-flip';
     const card = k => '<div class="fc" data-k="'+k+'">'
       + '<div class="ht"><span>0</span></div><div class="hb"><span>0</span></div>'
@@ -3303,8 +3412,8 @@ const BUILD = {
     };
   },
 
-  /* ---- 05 ANALOG ---- */
-  ANALOG(root){
+  /* ---- 05 SYNCRO ---- */
+  SYNCRO(root){
     root.className = 'ck ck-analog';
     let ticks = '';
     for(let i = 0; i < 60; i++){
@@ -3349,7 +3458,7 @@ const BUILD = {
   },
 
   /* ---- 06 RING ---- */
-  RING(root){
+  ORBIT(root){
     root.className = 'ck ck-ring';
     const R = [88, 72, 56], C = R.map(r => 2 * Math.PI * r);
     const ring = (i, cls, k) => '<circle class="rg-bar ' + cls + '" data-k="' + k + '" cx="100" cy="100" r="' + R[i]
@@ -3380,7 +3489,7 @@ const BUILD = {
   },
 
   /* ---- 07 SEG7 ---- */
-  SEG7(root){
+  ARRAY(root){
     root.className = 'ck ck-seg7';
     const digit = k => '<div class="s7" data-k="' + k + '">'
       + ['a','b','c','d','e','f','g'].map(s => '<i class="sg ' + s + '"></i>').join('') + '</div>';
@@ -3418,7 +3527,7 @@ const BUILD = {
   },
 
   /* ---- 08 DOT ---- */
-  DOT(root){
+  LATTICE(root){
     root.className = 'ck ck-dot';
     root.innerHTML = '<div class="dot-grid" data-k="g"></div><div class="ck-sub" data-k="sub"></div>';
     const grid = root.querySelector('[data-k="g"]');
@@ -3469,8 +3578,8 @@ const BUILD = {
     };
   },
 
-  /* ---- 09 BINARY (BCD) ---- */
-  BINARY(root){
+  /* ---- 09 RADIX (BCD) ---- */
+  RADIX(root){
     root.className = 'ck ck-bin';
     root.innerHTML = '<div class="bin-grid" data-k="g"></div><div class="ck-sub" data-k="sub"></div>';
     const grid = root.querySelector('[data-k="g"]'), sub = root.querySelector('[data-k="sub"]');
@@ -3510,7 +3619,7 @@ const BUILD = {
   },
 
   /* ---- 10 WORD ---- */
-  WORD(root){
+  LEXICON(root){
     root.className = 'ck ck-word';
     root.innerHTML = '<div class="wd" data-k="w"></div><div class="ck-sub" data-k="sub"></div>';
     const wrap = root.querySelector('[data-k="w"]'), sub = root.querySelector('[data-k="sub"]');
@@ -3887,6 +3996,74 @@ function setFill(on, quiet){
 })();
 
 /* ============================================================
+   PRESET · one press, and the composition is there
+   ------------------------------------------------------------
+   The four values are not four separate choices — they only read as the
+   picture together — so they are applied as one, in the order the app
+   itself would: the face, then FILL (the offsets have nothing to move
+   inside until it is on), then the place in it, then the size.
+
+   The size is written as the reader sees it. applyScale() lifts the
+   stored figure by FILL_ROOM while FILL is on, because the plate has
+   the whole screen to fill and would otherwise look far smaller than
+   the dial promises; so the stored scale that reads 2.91× is
+   2.91 / FILL_ROOM, not 2.91.
+
+   Nothing new is remembered: each of the four keeps its own key, so a
+   reload restores the preset through exactly the storage the controls
+   already write.
+   ============================================================ */
+const PRESET = { face: 1, size: 2.91, x: -22.5, y: 0 };
+
+function applyPreset(){
+  const f = FACES[PRESET.face];
+  activate(PRESET.face);
+  setFill(true, true);
+  setFillPos(PRESET.x, PRESET.y, true);
+  setScale(PRESET.size / FILL_ROOM);
+  /* three of the four steps announce themselves; the last word is this one */
+  $('statusReadout').textContent = 'PRESET // FACE ' + f.n + ' ' + f.t + ' · ' +
+    fmtScale(PRESET.size) + '× · ' + PRESET.x + 'VW';
+}
+
+(function presetUI(){
+  const b = $('hudPreset');
+  if(b) b.addEventListener('click', applyPreset);
+})();
+
+/* ============================================================
+   O · the preset, and the screen to show it on
+   ------------------------------------------------------------
+   The press itself is the gesture the fullscreen request needs, so the
+   two happen in one act rather than the key asking a button to ask the
+   browser. It only ever enters: pressing O again while full is just the
+   preset again, because the key names a state, not a toggle — Esc or
+   the FULLSCREEN button is the way back out.
+
+   The browser answers a request asynchronously and may refuse it, so
+   the status line claims fullscreen only when the change actually
+   lands, and only if the line is still the preset's own.
+   ============================================================ */
+function applyPresetFull(){
+  applyPreset();
+  if(inFull()) return;                    /* there already: the preset was the job */
+  const landed = function(){
+    document.removeEventListener('fullscreenchange', landed);
+    document.removeEventListener('webkitfullscreenchange', landed);
+    /* the suffix is added only to the preset's own line, and only once: a
+       refused request leaves its listener armed, so a second press can
+       arm a second one, and both would run on the same change. */
+    const s = $('statusReadout');
+    if(s && inFull() && /^PRESET/.test(s.textContent) && s.textContent.indexOf('FULLSCREEN') < 0){
+      s.textContent += ' · FULLSCREEN';
+    }
+  };
+  document.addEventListener('fullscreenchange', landed);
+  document.addEventListener('webkitfullscreenchange', landed);
+  enterFull();
+}
+
+/* ============================================================
    LAYOUT · phone / computer, pinned by hand
    ------------------------------------------------------------
    The detector reads the window and decides; the two buttons in the
@@ -4043,49 +4220,49 @@ function toggleUI(){ setUI(!uiOff); }
 })();
 
 /* ============================================================
-   RULES · the seven motion profiles for the background bars
+   RULES · the background motion profiles
    ------------------------------------------------------------
    The rule layer owns every profile, remembers the choice, and
    publishes them as window.RULES. This side names the one in play
    and asks for another; it never moves a bar itself.
 
-     SYNC     all six re-place together, once a second
-     ROTATE   one bar every 0.16s, in random order
-     REIN     a fixed order at a fixed step — a readable sweep
-     CLICK    still until clicked, then the nearest bar on each
-              axis goes to the point clicked
-     FORMED   six smooth paths off one master clock, no jumps
-     RAIN     the bars give way to procedural rain
-     OFF      the bars hold still
+     RAIN     procedural weather on the canvas
+     NONE     no motion and no lines at all
+
+   The six jumping profiles this used to offer — SYNC, ROTATE, REIN,
+   CLICK, FORMED, OFF — are commented out in _new_rules.js, so they
+   are gone from the list the menu below is built from, and the
+   labels and notes for them are commented out here with them.
 
    The menu is built from window.RULES.modes rather than written out
    here, so a profile the engine cannot be set to can never appear in
    it, and one it gains shows up without this file being touched.
    ============================================================ */
 const RULE_LABEL = {
-  sync: 'SYNC', rotate: 'ROTATE', rein: 'REIN', click: 'CLICK',
-  formed: 'FORMED', rain: 'RAIN', off: 'OFF'
+  // sync: 'SYNC', rotate: 'ROTATE', rein: 'REIN', click: 'CLICK',
+  // formed: 'FORMED', off: 'OFF',
+  rain: 'RAIN', none: 'NONE'
 };
 const RULE_NOTE = {
-  sync:   'RULES // ALL SIX BARS AT ONCE',
-  rotate: 'RULES // ONE BAR EVERY 0.16S, RANDOM ORDER',
-  rein:   'RULES // ORDERED SWEEP, ONE BAR AT A TIME',
-  click:  'RULES // CLICK ANYWHERE TO PLACE THE BARS',
-  formed: 'RULES // CHOREOGRAPHED PATHS, NOTHING JUMPS',
+  // sync:   'RULES // ALL SIX BARS AT ONCE',
+  // rotate: 'RULES // ONE BAR EVERY 0.16S, RANDOM ORDER',
+  // rein:   'RULES // ORDERED SWEEP, ONE BAR AT A TIME',
+  // click:  'RULES // CLICK ANYWHERE TO PLACE THE BARS',
+  // formed: 'RULES // CHOREOGRAPHED PATHS, NOTHING JUMPS',
   rain:   'RAIN // PROCEDURAL WEATHER, SETTINGS OPEN',
-  off:    'RULES // BARS OFF'
+  none:   'RULES // NO MOTION, NO LINES'
 };
 const RULE_TITLE = {
-  sync:   'All six bars re-place themselves together, once a second',
-  rotate: 'One bar every 0.16s, in random order',
-  rein:   'Ordered sweep — a fixed running order at a fixed step, wrapping at the edge',
-  click:  'Still until you click: the nearest bar on each axis goes to the point clicked',
-  formed: 'Six smooth paths off one master clock — no jumps anywhere',
+  // sync:   'All six bars re-place themselves together, once a second',
+  // rotate: 'One bar every 0.16s, in random order',
+  // rein:   'Ordered sweep — a fixed running order at a fixed step, wrapping at the edge',
+  // click:  'Still until you click: the nearest bar on each axis goes to the point clicked',
+  // formed: 'Six smooth paths off one master clock — no jumps anywhere',
   rain:   'The bars give way to procedural rain, and its settings open beside them',
-  off:    'The bars hold still'
+  none:   'No motion and no lines — the background layer is empty'
 };
 
-function ruleMode(){ return window.RULES ? window.RULES.get() : 'sync'; }
+function ruleMode(){ return window.RULES ? window.RULES.get() : 'rain'; }
 
 /* The veil dials paint their own fill from --pct, but initVeil() only
    ever wired the two it owns. The rain dials are not its, so they set
@@ -4141,7 +4318,7 @@ function setRuleMode(m, quiet){
 }
 
 function cycleRuleMode(){
-  const list = (window.RULES && window.RULES.modes) || ['sync'];
+  const list = (window.RULES && window.RULES.modes) || ['rain'];
   const i = list.indexOf(ruleMode());
   setRuleMode(list[(i + 1) % list.length]);
 }
@@ -4177,6 +4354,74 @@ window.addEventListener('rk:rules', function(){ paintRuleMode(); paintRain(); })
 })();
 
 /* ============================================================
+   CONTROL DECK · the veil, the rain and the clock position
+   ------------------------------------------------------------
+   Three fixed panels became one. Each used to hang wherever it could
+   find room — the veil centred, the rain on the right, the clock
+   position on the left — and the reader asked for a single deck with
+   a handle instead. The handle is the DECK button beside FULLSCREEN,
+   and the deck closes on the ×, on the button again, or on Space.
+
+   It is a disclosure rather than a mode, so nothing about it is
+   stored: a reload gets the page the way it was designed, with the
+   deck shut, instead of whichever panel the last session left open.
+
+   The sections inside keep the rules they always had. CLOCK POSITION
+   belongs to FILL and RAIN SETTINGS belongs to RAIN, and both are
+   still decided in CSS, off data-fill and data-rules — the deck only
+   decides whether the frame drawn around them is on screen.
+   ============================================================ */
+let deckOpen = false;
+
+function paintDeck(){
+  document.documentElement.classList.toggle('deck-open', deckOpen);
+  const b = $('deckBtn');
+  if(b){
+    b.setAttribute('aria-expanded', String(deckOpen));
+    b.setAttribute('aria-pressed', String(deckOpen));
+  }
+}
+
+function setDeck(on, quiet){
+  deckOpen = !!on;
+  paintDeck();
+  if(!quiet) $('statusReadout').textContent = deckOpen ? 'DECK // OPEN' : 'DECK // CLOSED';
+}
+
+function toggleDeck(){ setDeck(!deckOpen); }
+
+(function deckUI(){
+  paintDeck();
+  const b = $('deckBtn');  if(b) b.addEventListener('click', function(){ toggleDeck(); });
+  const x = $('deckClose'); if(x) x.addEventListener('click', function(){ setDeck(false); });
+})();
+
+/* ============================================================
+   THEME · A and D, the pair the arrows are for faces
+   ------------------------------------------------------------
+   The order is read off the switcher in the top bar rather than
+   written down a second time here: the palette script owns which
+   modes exist, and the DOM already lists them in the order it shows
+   them, so a sixth mode would arrive without this file changing.
+   setTheme() is the palette script's own, and the only thing that
+   knows about meta colour, favicon and the WebGL uniforms.
+   ============================================================ */
+function themeList(){
+  return Array.prototype.map.call(
+    document.querySelectorAll('.thm-b[data-theme]'),
+    function(b){ return b.getAttribute('data-theme'); });
+}
+
+function cycleThemeBy(step){
+  const list = themeList();
+  if(!list.length || typeof window.setTheme !== 'function') return;
+  const at = list.indexOf(document.documentElement.getAttribute('data-theme'));
+  const next = list[((at < 0 ? 0 : at) + step + list.length) % list.length];
+  window.setTheme(next);
+  $('statusReadout').textContent = 'THEME // ' + next.toUpperCase();
+}
+
+/* ============================================================
    KEYBOARD · faces, fonts, options, zones
    ============================================================ */
 window.addEventListener('keydown', function(e){
@@ -4193,34 +4438,54 @@ window.addEventListener('keydown', function(e){
   const k = e.key;
   if(k === 'ArrowLeft'){ e.preventDefault(); activate((CLK.face - 1 + FACES.length) % FACES.length); return; }
   if(k === 'ArrowRight'){ e.preventDefault(); activate((CLK.face + 1) % FACES.length); return; }
+  /* WASD, laid out the way the arrows are: the vertical pair walks the
+     faces, the horizontal pair walks the themes. W and S take the keys
+     nothing was using; A and D displace the option chips that used to
+     answer to S (SWEEP) and D (DATE), which are now chips only — which
+     is why neither is in the hint row any more. */
+  if(k === 'w' || k === 'W'){ e.preventDefault(); activate((CLK.face + 1) % FACES.length); return; }
+  if(k === 's' || k === 'S'){ e.preventDefault(); activate((CLK.face - 1 + FACES.length) % FACES.length); return; }
+  if(k === 'd' || k === 'D'){ e.preventDefault(); cycleThemeBy(1); return; }
+  if(k === 'a' || k === 'A'){ e.preventDefault(); cycleThemeBy(-1); return; }
   if(k >= '1' && k <= '9'){ e.preventDefault(); activate(+k - 1); return; }
   if(k === '0'){ e.preventDefault(); activate(9); return; }
   if(k === 'f' || k === 'F'){ e.preventDefault(); setFont(CLK.font + (e.shiftKey ? -1 : 1)); return; }
   if(k === 'z' || k === 'Z'){ e.preventDefault(); setZone(CLK.zone + (e.shiftKey ? -1 : 1)); return; }
-  if(k === ' '){ e.preventDefault(); toggleOpt('secs'); return; }
-  if(k === 'd' || k === 'D'){ e.preventDefault(); toggleOpt('date'); return; }
+  /* Space is the deck's dismiss key while the deck is open, and the
+     seconds switch the rest of the time. */
+  if(k === ' '){ e.preventDefault(); if(deckOpen) setDeck(false); else toggleOpt('secs'); return; }
   if(k === 'h' || k === 'H'){ e.preventDefault(); toggleOpt('h24'); return; }
   if(k === 'b' || k === 'B'){ e.preventDefault(); toggleOpt('blink'); return; }
-  if(k === 's' || k === 'S'){ e.preventDefault(); toggleOpt('sweep'); return; }
   if(k === 'm' || k === 'M'){ e.preventDefault(); setFill(!CLK.fill); return; }
   if(k === 'r' || k === 'R'){ e.preventDefault(); cycleRuleMode(); return; }
   /* everything else the interface offers is gone in this state, but the
      key that brought it back has to survive it */
   if(k === 'u' || k === 'U'){ e.preventDefault(); toggleUI(); return; }
+  if(k === 'p' || k === 'P'){ e.preventDefault(); applyPreset(); return; }
+  if(k === 'o' || k === 'O'){ e.preventDefault(); applyPresetFull(); return; }
 }, false);
 
-/* the bottom bar's button: the whole page in the screen, nothing else */
+/* the bottom bar's button: the whole page in the screen, nothing else.
+   The three helpers are shared with O, which needs to go in without
+   ever coming out — asking here rather than repeating the prefixed
+   call means there is one place that knows how fullscreen is spelled. */
+function inFull(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+function enterFull(){
+  if(inFull()) return;
+  const d = document.documentElement;
+  (d.requestFullscreen || d.webkitRequestFullscreen || function(){}).call(d);
+}
+function exitFull(){
+  if(!inFull()) return;
+  (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document);
+}
+
 (function hudGo(){
   const b = $('hudGo');
   if(!b) return;
-  b.addEventListener('click', function(){
-    const d = document.documentElement;
-    if(document.fullscreenElement || document.webkitFullscreenElement){
-      (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document);
-    } else {
-      (d.requestFullscreen || d.webkitRequestFullscreen || function(){}).call(d);
-    }
-  });
+  b.addEventListener('click', function(){ if(inFull()) exitFull(); else enterFull(); });
 })();
 
 document.addEventListener('visibilitychange', function(){
@@ -4264,6 +4529,16 @@ window.CLOCK = {
   ui: function(){ return uiOff; },
   setUI: function(v){ setUI(v); },
   toggleUI: toggleUI,
+  deck: function(){ return deckOpen; },
+  setDeck: setDeck,
+  toggleDeck: toggleDeck,
+  theme: function(){ return document.documentElement.getAttribute('data-theme'); },
+  nextTheme: function(){ cycleThemeBy(1); },
+  prevTheme: function(){ cycleThemeBy(-1); },
+  preset: function(){ return PRESET; },
+  applyPreset: applyPreset,
+  applyPresetFull: applyPresetFull,
+  fullscreen: inFull,
   fillPos: function(){ return { x: FILL_POS.x, y: FILL_POS.y }; },
   setFillPos: function(x, y){ setFillPos(x, y); },
   ruleMode: ruleMode,
